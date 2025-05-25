@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多语种即时翻译器</title>
+    <title>多语种即时翻译器（带语音功能）</title>
     <style>
         body { 
             font-family: 'Arial', 'Microsoft YaHei', sans-serif; 
@@ -45,6 +45,7 @@
             border-radius: 10px; 
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
             text-align: left;
+            position: relative;
         }
         h2 { 
             color: #8a2be2; 
@@ -54,28 +55,35 @@
             font-weight: bold;
             color: #6a0dad;
             margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .speak-btn {
-            background: #e6d5ff;
-            border: none;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        .speak-btn:hover {
-            background: #d4a5ff;
+            display: block;
         }
         .loading {
             color: #888;
             font-style: italic;
+        }
+        .speak-btn {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            background: #8a2be2;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .speak-btn:hover {
+            background: #6a0dad;
+            transform: scale(1.1);
+        }
+        .speak-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
         @media (max-width: 600px) {
             .output-box {
@@ -86,7 +94,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>🌸 中文 → 四语同步翻译器 🌸</h2>
+        <h2>🌸 中文 → 四语同步翻译器（带语音功能）🌸</h2>
         <textarea id="inputText" placeholder="在这里输入中文...比如「今天天气真好！」"></textarea>
         
         <div class="output-container" id="output">
@@ -95,72 +103,85 @@
     </div>
 
     <script>
-        // 支持的语言和对应的语音合成语言代码
-        const languages = [
-            { code: 'en', name: '英语', voiceLang: 'en-US' },
-            { code: 'ja', name: '日语', voiceLang: 'ja-JP' },
-            { code: 'ko', name: '韩语', voiceLang: 'ko-KR' },
-            { code: 'fr', name: '法语', voiceLang: 'fr-FR' }
-        ];
-
-        document.getElementById('inputText').addEventListener('input', function() {
-            const inputText = this.value;
+        // 免费翻译API（每日限额100次，测试够用啦！）
+        document.getElementById('inputText').addEventListener('input', async (e) => {
+            const text = e.target.value.trim();
             const outputContainer = document.getElementById('output');
             
-            if(inputText.trim() === '') {
+            if (!text) {
                 outputContainer.innerHTML = '';
                 return;
             }
             
+            const languages = [
+                { code: 'en', name: '英语', voiceLang: 'en-US' },
+                { code: 'ja', name: '日语', voiceLang: 'ja-JP' },
+                { code: 'fr', name: '法语', voiceLang: 'fr-FR' },
+                { code: 'ko', name: '韩语', voiceLang: 'ko-KR' }
+            ];
+            
             let outputHTML = '';
             
-            languages.forEach(lang => {
-                outputHTML += `
-                    <div class="output-box">
-                        <div class="language-label">
-                            <span>${lang.name}：</span>
-                            <button class="speak-btn" onclick="speakText('${lang.code}-translation', '${lang.voiceLang}')">
+            for (let lang of languages) {
+                try {
+                    const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh-CN|${lang.code}`);
+                    const data = await response.json();
+                    const translatedText = data.responseData.translatedText || '（翻译失败）';
+                    
+                    outputHTML += `
+                        <div class="output-box">
+                            <button class="speak-btn" onclick="speakText('${translatedText}', '${lang.voiceLang}')" 
+                                    title="朗读翻译" ${!translatedText || translatedText === '（翻译失败）' ? 'disabled' : ''}>
                                 🔊
                             </button>
+                            <span class="language-label">${lang.name}：</span>
+                            <div class="translation-result">
+                                ${translatedText}
+                            </div>
                         </div>
-                        <div class="translation-result" id="${lang.code}-translation">
-                            ${inputText.length > 0 ? '翻译加载中...' : ''}
+                    `;
+                } catch (error) {
+                    outputHTML += `
+                        <div class="output-box">
+                            <button class="speak-btn" disabled title="无法朗读">
+                                🔊
+                            </button>
+                            <span class="language-label">${lang.name}:</span>
+                            <div class="translation-result">🆘 API忙线中...</div>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                }
+            }
             
             outputContainer.innerHTML = outputHTML;
-            
-            // 这里模拟翻译结果 - 实际使用时替换为真实API调用
-            setTimeout(() => {
-                languages.forEach(lang => {
-                    const translationElement = document.getElementById(`${lang.code}-translation`);
-                    if (translationElement) {
-                        // 这只是模拟翻译结果，实际应该调用API
-                        translationElement.textContent = `[${lang.name}翻译结果] ${inputText}`;
-                    }
-                });
-            }, 800);
         });
         
-        // 文字转语音功能
-        function speakText(elementId, lang) {
-            const textElement = document.getElementById(elementId);
-            if (!textElement) return;
+        // 语音合成函数
+        function speakText(text, lang) {
+            if (!text || text === '（翻译失败）') return;
             
-            const text = textElement.textContent;
-            if (!text) return;
+            // 检查浏览器是否支持语音合成
+            if (!window.speechSynthesis) {
+                alert('您的浏览器不支持语音合成功能，请使用Chrome、Edge或Firefox等现代浏览器。');
+                return;
+            }
             
-            // 使用Web Speech API
-            const speech = new SpeechSynthesisUtterance();
-            speech.text = text;
-            speech.lang = lang;
-            speech.volume = 1;
-            speech.rate = 1;
-            speech.pitch = 1;
+            // 停止当前正在播放的语音
+            window.speechSynthesis.cancel();
             
-            window.speechSynthesis.speak(speech);
+            // 创建语音合成实例
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            utterance.rate = 0.9; // 稍微放慢语速
+            
+            // 播放语音
+            window.speechSynthesis.speak(utterance);
+            
+            // 错误处理
+            utterance.onerror = (event) => {
+                console.error('语音合成错误:', event);
+                alert('朗读时出错，请重试或检查浏览器设置。');
+            };
         }
     </script>
 </body>
