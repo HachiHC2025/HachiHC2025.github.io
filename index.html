@@ -1,41 +1,125 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>Untitled</title>
-  
-
-</head>
-<body>
-<!-- partial:index.partial.html -->
-<!DOCTYPE html>
-<html>
-<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>多语种即时翻译器</title>
     <style>
-        body { font-family: Arial; text-align: center; margin-top: 50px; background: #f9f4ff; }
+        body { 
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif; 
+            text-align: center; 
+            margin-top: 50px; 
+            background: #f9f4ff;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
         textarea { 
-            width: 80%; height: 100px; 
-            padding: 10px; font-size: 16px;
-            border: 2px solid #d4a5ff; border-radius: 10px;
+            width: 90%; 
+            height: 120px; 
+            padding: 15px; 
+            font-size: 16px;
+            border: 2px solid #d4a5ff; 
+            border-radius: 12px;
+            resize: vertical;
+            transition: border 0.3s;
         }
-        .output { 
-            margin: 15px auto; padding: 12px; 
-            width: 70%; background: white;
-            border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        textarea:focus {
+            outline: none;
+            border-color: #8a2be2;
         }
-        h2 { color: #8a2be2; }
+        .output-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+        .output-box {
+            width: 48%;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px; 
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+        h2 { 
+            color: #8a2be2; 
+            margin-bottom: 25px;
+        }
+        .language-label {
+            font-weight: bold;
+            color: #6a0dad;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .loading {
+            color: #888;
+            font-style: italic;
+        }
+        @media (max-width: 600px) {
+            .output-box {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <h2>🌸 中文 → 四语同步翻译器 🌸</h2>
-    <textarea id="inputText" placeholder="在这里输入中文...比如「今天吃什么？」"></textarea>
-    <div id="output"></div>
-    <script src="你的代码.js"></script>
-</body>
-</html>
-<!-- partial -->
-  <script  src="./script.js"></script>
+    <div class="container">
+        <h2>🌸 中文 → 四语同步翻译器 🌸</h2>
+        <textarea id="inputText" placeholder="在这里输入中文...比如「今天天气真好！」"></textarea>
+        
+        <div class="output-container" id="output">
+            <!-- 翻译结果将在这里动态生成 -->
+        </div>
+    </div>
 
+    <script>
+        // 这里可以添加你的JavaScript翻译功能
+        document.getElementById('inputText').addEventListener('input', function() {
+            const inputText = this.value;
+            const outputContainer = document.getElementById('output');
+            
+            if(inputText.trim() === '') {
+                outputContainer.innerHTML = '';
+                return;
+            }
+            
+            // 模拟翻译结果 - 实际使用时替换为真实API调用
+            const languages = [
+                { code: 'en', name: '英语' },
+                { code: 'ja', name: '日语' },
+                { code: 'ko', name: '韩语' },
+                { code: 'fr', name: '法语' }
+            ];
+            
+            let outputHTML = '';
+            
+            languages.forEach(lang => {
+                outputHTML += `
+                    <div class="output-box">
+                        <span class="language-label">${lang.name}：</span>
+                        <div class="translation-result" id="${lang.code}-output">
+                            ${inputText.length > 0 ? '翻译加载中...' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            outputContainer.innerHTML = outputHTML;
+            
+            // 实际应用中这里应该调用翻译API
+            // 例如: translateText(inputText, languages);
+        });
+        
+        // 实际翻译函数示例
+        async function translateText(text, targetLanguages) {
+            // 这里应该实现实际的API调用
+            // 可以使用Google Translate API、百度翻译API等
+        }
+    </script>
 </body>
 </html>
