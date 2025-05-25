@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多语种即时翻译器（带语音功能）</title>
+    <title>多語種即時翻譯器（帶拼音、語音和歷史記錄）</title>
     <style>
         :root {
             --primary-color: #8a2be2;
@@ -14,13 +14,24 @@
             --text-light: #666;
             --white: #fff;
             --disabled: #ccc;
+            --error-color: #ff4d4f;
+            --success-color: #52c41a;
             --box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            --history-bg: #f0e5ff;
+            --transition: all 0.3s ease;
+            --pinyin-color: #e91e63;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
         
         body { 
             font-family: 'Arial', 'Microsoft YaHei', sans-serif; 
-            text-align: center; 
-            margin: 50px auto 0;
+            margin: 0;
+            padding: 20px 0;
             background: var(--bg-color);
             line-height: 1.6;
             color: var(--text-dark);
@@ -30,24 +41,90 @@
         .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 0 20px;
+        }
+        
+        .input-container {
+            position: relative;
         }
         
         textarea { 
-            width: 90%; 
+            width: 100%; 
             min-height: 120px; 
-            padding: 15px; 
+            padding: 15px 45px 15px 15px; 
             font-size: 16px;
             border: 2px solid var(--light-purple); 
             border-radius: 12px;
             resize: vertical;
-            transition: border 0.3s, box-shadow 0.3s;
+            transition: var(--transition);
         }
         
         textarea:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.2);
+        }
+        
+        /* 新增拼音顯示區域樣式 */
+        .pinyin-display {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: rgba(233, 30, 99, 0.05);
+            border-radius: 8px;
+            color: var(--pinyin-color);
+            font-size: 14px;
+            line-height: 1.8;
+            min-height: 40px;
+            border: 1px dashed rgba(233, 30, 99, 0.3);
+        }
+        
+        .pinyin-display.empty {
+            color: var(--text-light);
+            font-style: italic;
+        }
+        
+        .char-counter {
+            text-align: right;
+            color: var(--text-light);
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+        
+        .char-counter.warning {
+            color: orange;
+        }
+        
+        .char-counter.error {
+            color: var(--error-color);
+        }
+        
+        .speak-original-btn {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            background: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+        
+        .speak-original-btn:hover {
+            background: var(--secondary-color);
+            transform: scale(1.1);
+        }
+        
+        .speak-original-btn:disabled {
+            background: var(--disabled);
+            cursor: not-allowed;
+            transform: none;
         }
         
         .output-container {
@@ -64,7 +141,7 @@
             box-shadow: var(--box-shadow);
             text-align: left;
             position: relative;
-            transition: transform 0.3s;
+            transition: var(--transition);
         }
         
         .output-box:hover {
@@ -89,6 +166,14 @@
             word-break: break-word;
         }
         
+        .success-text {
+            color: var(--success-color);
+        }
+        
+        .error-text {
+            color: var(--error-color);
+        }
+        
         .speak-btn {
             position: absolute;
             right: 15px;
@@ -103,7 +188,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            transition: var(--transition);
             font-size: 14px;
         }
         
@@ -134,230 +219,344 @@
             to { transform: rotate(360deg); }
         }
         
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: var(--disabled);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: var(--light-purple);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--secondary-color);
+        }
+        
+        /* 歷史記錄樣式 */
+        .history-container {
+            margin-top: 30px;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border-radius: 10px;
+            background: var(--white);
+            box-shadow: var(--box-shadow);
+            scrollbar-width: thin;
+            scrollbar-color: var(--light-purple) var(--bg-color);
+        }
+        
+        .history-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .history-list::-webkit-scrollbar-track {
+            background: var(--bg-color);
+            border-radius: 10px;
+        }
+        
+        .history-list::-webkit-scrollbar-thumb {
+            background-color: var(--light-purple);
+            border-radius: 10px;
+        }
+        
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .history-item:hover {
+            background: var(--history-bg);
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-item-time {
+            font-size: 0.8em;
+            color: var(--text-light);
+            margin-bottom: 5px;
+        }
+        
+        .history-item-text {
+            font-weight: bold;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .history-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .history-actions .btn {
+            flex: none;
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-light);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         @media (max-width: 600px) {
-            body {
-                margin-top: 30px;
-            }
-            
             .container {
-                padding: 15px;
-            }
-            
-            textarea {
-                width: 100%;
+                padding: 0 15px;
             }
             
             .output-container {
                 grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .history-actions {
+                width: 100%;
+                justify-content: flex-end;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🌸 中文 → 四语同步翻译器（带语音功能）🌸</h1>
-        <textarea id="inputText" placeholder="在这里输入中文...比如「今天天气真好！」" aria-label="输入中文文本"></textarea>
+        <h1>🌸 中文 → 四語同步翻譯器（帶拼音、語音和歷史記錄）🌸</h1>
+        <div class="input-container">
+            <textarea id="inputText" placeholder="在這裡輸入中文...比如「今天天氣真好！」" aria-label="輸入中文文本" maxlength="500"></textarea>
+            <button id="speakOriginalBtn" class="speak-original-btn" disabled title="朗讀原文">🔊</button>
+        </div>
+        <!-- 新增拼音顯示區域 -->
+        <div id="pinyinDisplay" class="pinyin-display empty">拼音將顯示在這裡...</div>
+        <div class="char-counter" id="charCounter">0/500</div>
+        
+        <div class="action-buttons">
+            <button id="clearBtn" class="btn" disabled>清空</button>
+            <button id="translateBtn" class="btn" disabled>翻譯</button>
+            <button id="showHistoryBtn" class="btn btn-secondary">顯示歷史記錄</button>
+        </div>
         
         <div class="output-container" id="output">
-            <!-- 翻译结果将在这里动态生成 -->
+            <!-- 翻譯結果將在這裡動態生成 -->
+        </div>
+        
+        <div class="history-container" id="historyContainer" style="display: none;">
+            <div class="history-header">
+                <h2>翻譯歷史記錄</h2>
+                <div class="history-actions">
+                    <button id="clearHistoryBtn" class="btn btn-secondary">清空歷史</button>
+                    <button id="hideHistoryBtn" class="btn">隱藏歷史</button>
+                </div>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="empty-state">暫無歷史記錄</div>
+            </div>
         </div>
     </div>
 
     <script>
-        // 防抖函数，减少API调用频率
-        function debounce(func, delay) {
-            let timeoutId;
-            return function(...args) {
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(() => {
-                    func.apply(this, args);
-                }, delay);
-            };
-        }
+        // 配置常量
+        const MAX_CHARS = 500;
+        const DEBOUNCE_DELAY = 300;
+        const CACHE_EXPIRY = 30 * 60 * 1000; // 30分鐘緩存
+        const MAX_HISTORY_ITEMS = 50;
+        const STORAGE_KEY = 'translationHistory';
         
-        // 转义HTML特殊字符，防止XSS攻击
-        function escapeHtml(unsafe) {
-            return unsafe.replace(/[&<>"']/g, function(match) {
-                return {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                }[match];
-            });
-        }
-        
-        // 语言配置
+        // 語言配置
         const LANGUAGES = Object.freeze([
-            { code: 'en', name: '英语', voiceLang: 'en-US' },
-            { code: 'ja', name: '日语', voiceLang: 'ja-JP' },
-            { code: 'fr', name: '法语', voiceLang: 'fr-FR' },
-            { code: 'ko', name: '韩语', voiceLang: 'ko-KR' }
+            { code: 'en', name: '英語', voiceLang: 'en-US' },
+            { code: 'ja', name: '日語', voiceLang: 'ja-JP' },
+            { code: 'fr', name: '法語', voiceLang: 'fr-FR' },
+            { code: 'ko', name: '韓語', voiceLang: 'ko-KR' }
         ]);
         
-        // DOM元素缓存
+        // 快取對象
+        const translationCache = new Map();
+        
+        // DOM元素快取
         const elements = {
             inputText: document.getElementById('inputText'),
-            output: document.getElementById('output')
+            output: document.getElementById('output'),
+            charCounter: document.getElementById('charCounter'),
+            clearBtn: document.getElementById('clearBtn'),
+            translateBtn: document.getElementById('translateBtn'),
+            showHistoryBtn: document.getElementById('showHistoryBtn'),
+            hideHistoryBtn: document.getElementById('hideHistoryBtn'),
+            clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+            historyContainer: document.getElementById('historyContainer'),
+            historyList: document.getElementById('historyList'),
+            speakOriginalBtn: document.getElementById('speakOriginalBtn'),
+            pinyinDisplay: document.getElementById('pinyinDisplay') // 新增拼音顯示元素
         };
         
-        // 初始化函数
-        function init() {
-            // 添加防抖输入监听
-            elements.inputText.addEventListener('input', debounce(handleInput, 500));
-            
-            // 检查语音合成支持
-            if (!window.speechSynthesis) {
-                console.warn('浏览器不支持语音合成API');
-            }
-        }
+        // 語音合成對象
+        let speechSynthesis = window.speechSynthesis;
+        let voices = [];
         
-        // 处理输入
-        async function handleInput(e) {
-            const text = e.target.value.trim();
-            
-            if (!text) {
-                elements.output.innerHTML = '';
-                return;
-            }
-            
-            // 显示加载状态
-            renderLoadingState();
-            
-            try {
-                // 并行获取所有翻译
-                const translations = await Promise.allSettled(
-                    LANGUAGES.map(lang => fetchTranslation(text, lang))
-                );
-                
-                // 渲染结果
-                renderTranslations(translations);
-            } catch (error) {
-                console.error('翻译出错:', error);
-                renderErrorState();
-            }
-        }
-        
-        // 获取翻译
-        async function fetchTranslation(text, lang) {
-            try {
-                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh-CN|${lang.code}`);
-                
-                if (!response.ok) {
-                    throw new Error(`API请求失败: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                return {
-                    ...lang,
-                    translatedText: data.responseData?.translatedText || '（翻译失败）'
-                };
-            } catch (error) {
-                console.error(`${lang.name}翻译出错:`, error);
-                return {
-                    ...lang,
-                    translatedText: '🆘 翻译服务暂时不可用'
-                };
-            }
-        }
-        
-        // 渲染加载状态
-        function renderLoadingState() {
-            elements.output.innerHTML = LANGUAGES.map(lang => `
-                <div class="output-box">
-                    <button class="speak-btn" disabled>
-                        🔊
-                    </button>
-                    <span class="language-label">${lang.name}：</span>
-                    <div class="translation-result">
-                        <span class="loading-indicator"></span>翻译中...
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // 渲染翻译结果
-        function renderTranslations(translations) {
-            elements.output.innerHTML = translations.map(result => {
-                const { name, translatedText, voiceLang } = result.value || {};
-                const isSuccess = result.status === 'fulfilled' && 
-                                translatedText && 
-                                translatedText !== '（翻译失败）';
-                
-                return `
-                    <div class="output-box">
-                        <button class="speak-btn" 
-                                onclick="speakText('${escapeHtml(translatedText)}', '${voiceLang}')" 
-                                title="朗读翻译" 
-                                ${!isSuccess ? 'disabled' : ''}>
-                            🔊
-                        </button>
-                        <span class="language-label">${name}：</span>
-                        <div class="translation-result">
-                            ${translatedText || '翻译失败'}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        // 渲染错误状态
-        function renderErrorState() {
-            elements.output.innerHTML = `
-                <div class="output-box" style="grid-column: 1/-1">
-                    <div class="translation-result" style="color: red;">
-                        ⚠️ 翻译服务暂时不可用，请稍后再试
-                    </div>
-                </div>
-            `;
-        }
-        
-        // 语音合成函数
-        function speakText(text, lang) {
-            if (!text || text.includes('（翻译失败）') || text.includes('不可用')) return;
-            
-            if (!window.speechSynthesis) {
-                alert('您的浏览器不支持语音合成功能，请使用Chrome、Edge或Firefox等现代浏览器。');
-                return;
-            }
-            
-            // 停止当前语音
-            window.speechSynthesis.cancel();
-            
-            const utterance = new SpeechSynthesisUtterance();
-            utterance.text = text;
-            utterance.lang = lang;
-            utterance.rate = 0.9;
-            utterance.volume = 1;
-            utterance.pitch = 1;
-            
-            // 查找合适的语音
-            const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v => v.lang === lang) || 
-                                 voices.find(v => v.lang.startsWith(lang.split('-')[0]));
-            
-            if (preferredVoice) {
-                utterance.voice = preferredVoice;
-            }
-            
-            utterance.onerror = (event) => {
-                console.error('语音合成错误:', event);
-                alert('朗读时出错: ' + event.error);
-            };
-            
-            window.speechSynthesis.speak(utterance);
-        }
-        
-        // 初始化语音合成API
-        if (window.speechSynthesis) {
-            window.speechSynthesis.onvoiceschanged = () => {
-                console.log('语音列表已加载');
-            };
-        }
-        
-        // 启动应用
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
+        // 拼音字典 (簡化版，實際應用中可能需要更完整的字典)
+        const PINYIN_MAP = {
+            '啊': 'ā', '阿': 'ā', '埃': 'āi', '挨': 'āi', '哎': 'āi', '唉': 'āi',
+            '哀': 'āi', '皚': 'ái', '癌': 'ái', '藹': 'ǎi', '矮': 'ǎi', '艾': 'ài',
+            '礙': 'ài', '愛': 'ài', '隘': 'ài', '鞍': 'ān', '氨': 'ān', '安': 'ān',
+            '俺': 'ǎn', '按': 'àn', '暗': 'àn', '岸': 'àn', '胺': 'àn', '案': 'àn',
+            '骯': 'āng', '昂': 'áng', '盎': 'àng', '凹': 'āo', '敖': 'áo', '熬': 'áo',
+            '翱': 'áo', '襖': 'ǎo', '傲': 'ào', '奧': 'ào', '懊': 'ào', '澳': 'ào',
+            '芭': 'bā', '捌': 'bā', '扒': 'bā', '叭': 'bā', '吧': 'bā', '笆': 'bā',
+            '八': 'bā', '疤': 'bā', '巴': 'bā', '拔': 'bá', '跋': 'bá', '靶': 'bǎ',
+            '把': 'bǎ', '耙': 'bà', '壩': 'bà', '霸': 'bà', '罷': 'bà', '爸': 'bà',
+            '白': 'bái', '柏': 'bǎi', '百': 'bǎi', '擺': 'bǎi', '佰': 'bǎi', '敗': 'bài',
+            '拜': 'bài', '稗': 'bài', '斑': 'bān', '班': 'bān', '搬': 'bān', '扳': 'bān',
+            '般': 'bān', '頒': 'bān', '板': 'bǎn', '版': 'bǎn', '扮': 'bàn', '拌': 'bàn',
+            '伴': 'bàn', '瓣': 'bàn', '半': 'bàn', '辦': 'bàn', '絆': 'bàn', '邦': 'bāng',
+            '幫': 'bāng', '梆': 'bāng', '榜': 'bǎng', '膀': 'bǎng', '綁': 'bǎng', '棒': 'bàng',
+            '磅': 'bàng', '蚌': 'bàng', '謗': 'bàng', '剝': 'bāo', '薄': 'báo', '雹': 'báo',
+            '保': 'bǎo', '堡': 'bǎo', '飽': 'bǎo', '寶': 'bǎo', '抱': 'bào', '報': 'bào',
+            '暴': 'bào', '豹': 'bào', '鮑': 'bào', '爆': 'bào', '杯': 'bēi', '碑': 'bēi',
+            '悲': 'bēi', '卑': 'bēi', '北': 'běi', '輩': 'bèi', '背': 'bèi', '貝': 'bèi',
+            '倍': 'bèi', '狽': 'bèi', '備': 'bèi', '憊': 'bèi', '被': 'bèi', '奔': 'bēn',
+            '苯': 'běn', '本': 'běn', '笨': 'bèn', '崩': 'bēng', '繃': 'bēng', '甭': 'béng',
+            '泵': 'bèng', '蹦': 'bèng', '進': 'bèng', '逼': 'bī', '鼻': 'bí', '比': 'bǐ',
+            '鄙': 'bǐ', '筆': 'bǐ', '彼': 'bǐ', '碧': 'bì', '蓖': 'bì', '蔽': 'bì',
+            '畢': 'bì', '斃': 'bì', '毖': 'bì', '幣': 'bì', '庇': 'bì', '痹': 'bì',
+            '閉': 'bì', '敝': 'bì', '弊': 'bì', '必': 'bì', '辟': 'bì', '壁': 'bì',
+            '臂': 'bì', '避': 'bì', '陛': 'bì', '鞭': 'biān', '邊': 'biān', '編': 'biān',
+            '貶': 'biǎn', '扁': 'biǎn', '便': 'biàn', '變': 'biàn', '卞': 'biàn', '辨': 'biàn',
+            '辯': 'biàn', '辮': 'biàn', '遍': 'biàn', '標': 'biāo', '彪': 'biāo', '膘': 'biāo',
+            '表': 'biǎo', '鱉': 'biē', '憋': 'biē', '別': 'bié', '癟': 'biě', '彬': 'bīn',
+            '斌': 'bīn', '瀕': 'bīn', '濱': 'bīn', '賓': 'bīn', '擯': 'bìn', '兵': 'bīng',
+            '冰': 'bīng', '柄': 'bǐng', '丙': 'bǐng', '秉': 'bǐng', '餅': 'bǐng', '炳': 'bǐng',
+            '病': 'bìng', '並': 'bìng', '玻': 'bō', '菠': 'bō', '播': 'bō', '撥': 'bō',
+            '缽': 'bō', '波': 'bō', '博': 'bó', '勃': 'bó', '搏': 'bó', '鉑': 'bó',
+            '箔': 'bó', '伯': 'bó', '帛': 'bó', '舶': 'bó', '脖': 'bó', '膊': 'bó',
+            '渤': 'bó', '泊': 'bó', '駁': 'bó', '捕': 'bǔ', '卜': 'bǔ', '哺': 'bǔ',
+            '補': 'bǔ', '埠': 'bù', '不': 'bù', '布': 'bù', '步': 'bù', '簿': 'bù',
+            '部': 'bù', '怖': 'bù', '擦': 'cā', '猜': 'cāi', '裁': 'cái', '材': 'cái',
+            '才': 'cái', '財': 'cái', '睬': 'cǎi', '踩': 'cǎi', '採': 'cǎi', '彩': 'cǎi',
+            '菜': 'cài', '蔡': 'cài', '餐': 'cān', '參': 'cān', '蠶': 'cán', '殘': 'cán',
+            '慚': 'cán', '慘': 'cǎn', '燦': 'càn', '蒼': 'cāng', '艙': 'cāng', '倉': 'cāng',
+            '滄': 'cāng', '藏': 'cáng', '操': 'cāo', '糙': 'cāo', '槽': 'cáo', '曹': 'cáo',
+            '草': 'cǎo', '廁': 'cè', '策': 'cè', '側': 'cè', '冊': 'cè', '測': 'cè',
+            '層': 'céng', '蹭': 'cèng', '插': 'chā', '叉': 'chā', '茬': 'chá', '茶': 'chá',
+            '查': 'chá', '碴': 'chá', '搽': 'chá', '察': 'chá', '岔': 'chà', '差': 'chà',
+            '詫': 'chà', '拆': 'chāi', '柴': 'chái', '豺': 'chái', '攙': 'chān', '摻': 'chān',
+            '蟬': 'chán', '饞': 'chán', '讒': 'chán', '纏': 'chán', '鏟': 'chǎn', '產': 'chǎn',
+            '闡': 'chǎn', '顫': 'chàn', '昌': 'chāng', '猖': 'chāng', '場': 'chǎng', '嘗': 'cháng',
+            '常': 'cháng', '長': 'cháng', '償': 'cháng', '腸': 'cháng', '廠': 'chǎng', '敞': 'chǎng',
+            '暢': 'chàng', '唱': 'chàng', '倡': 'chàng', '超': 'chāo', '抄': 'chāo', '鈔': 'chāo',
+            '朝': 'cháo', '嘲': 'cháo', '潮': 'cháo', '巢': 'cháo', '吵': 'chǎo', '炒': 'chǎo',
+            '車': 'chē', '扯': 'chě', '撤': 'chè', '掣': 'chè', '徹': 'chè', '澈': 'chè',
+            '郴': 'chēn', '臣': 'chén', '辰': 'chén', '塵': 'chén', '晨': 'chén', '忱': 'chén',
+            '沉': 'chén', '陳': 'chén', '趁': 'chèn', '襯': 'chèn', '撐': 'chēng', '稱': 'chēng',
+            '城': 'chéng', '橙': 'chéng', '成': 'chéng', '呈': 'chéng', '乘': 'chéng', '程': 'chéng',
+            '懲': 'chéng', '澄': 'chéng', '誠': 'chéng', '承': 'chéng', '逞': 'chěng', '騁': 'chěng',
+            '秤': 'chèng', '吃': 'chī', '痴': 'chī', '持': 'chí', '匙': 'chí', '池': 'chí',
+            '遲': 'chí', '弛': 'chí', '馳': 'chí', '恥': 'chǐ', '齒': 'chǐ', '侈': 'chǐ',
+            '尺': 'chǐ', '赤': 'chì', '翅': 'chì', '斥': 'chì', '熾': 'chì', '充': 'chōng',
+            '衝': 'chōng', '蟲': 'chóng', '崇': 'chóng', '寵': 'chǒng', '抽': 'chōu', '酬': 'chóu',
+            '稠': 'chóu', '愁': 'chóu', '籌': 'chóu', '仇': 'chóu', '綢': 'chóu', '瞅': 'chǒu',
+            '醜': 'chǒu', '臭': 'chòu', '初': 'chū', '出': 'chū', '櫥': 'chú', '廚': 'chú',
+            '躇': 'chú', '鋤': 'chú', '雛': 'chú', '滁': 'chú', '除': 'chú', '楚': 'chǔ',
+            '礎': 'chǔ', '儲': 'chǔ', '矗': 'chù', '搐': 'chù', '觸': 'chù', '處': 'chù',
+            '揣': 'chuǎi', '川': 'chuān', '穿': 'chuān', '椽': 'chuán', '傳': 'chuán', '船': 'chuán',
+            '喘': 'chuǎn', '串': 'chuàn', '瘡': 'chuāng', '窗': 'chuāng', '幢': 'chuáng', '床': 'chuáng',
+            '闖': 'chuǎng', '創': 'chuàng', '吹': 'chuī', '炊': 'chuī', '捶': 'chuí', '錘': 'chuí',
+            '垂': 'chuí', '春': 'chūn', '椿': 'chūn', '醇': 'chún', '唇': 'chún', '淳': 'chún',
+            '純': 'chún', '蠢': 'chǔn', '戳': 'chuō', '綽': 'chuò', '疵': 'cī', '茨': 'cí',
+            '磁': 'cí', '雌': 'cí', '辭': 'cí', '慈': 'cí', '瓷': 'cí', '詞': 'cí',
+            '此': 'cǐ', '刺': 'cì', '賜': 'cì', '次': 'cì', '聰': 'cōng', '蔥': 'cōng',
+            '囪': 'cōng', '匆': 'cōng', '從': 'cóng', '叢': 'cóng', '湊': 'còu', '粗': 'cū',
+            '醋': 'cù', '簇': 'cù', '促': 'cù', '躥': 'cuān', '篡': 'cuàn', '竄': 'cuàn',
+            '摧': 'cuī', '崔': 'cuī', '催': 'cuī', '脆': 'cuì', '瘁': 'cuì', '粹': 'cuì',
+            '淬': 'cuì', '翠': 'cuì', '村': 'cūn', '存': 'cún', '寸': 'cùn', '磋': 'cuō',
+            '撮': 'cuō', '搓': 'cuō', '措': 'cuò', '挫': 'cuò', '錯': 'cuò', '搭': 'dā',
+            '達': 'dá', '答': 'dá', '瘩': 'da', '打': 'dǎ', '大': 'dà', '呆': 'dāi',
+            '歹': 'dǎi', '傣': 'dǎi', '戴': 'dài', '帶': 'dài', '殆': 'dài', '代': 'dài',
+            '貸': 'dài', '袋': 'dài', '待': 'dài', '逮': 'dǎi', '怠': 'dài', '耽': 'dān',
+            '擔': 'dān', '丹': 'dān', '單': 'dān', '鄲': 'dān', '撣': 'dǎn', '膽': 'dǎn',
+            '旦': 'dàn', '氮': 'dàn', '但': 'dàn', '憚': 'dàn', '淡': 'dàn', '誕': 'dàn',
+            '彈': 'dàn', '蛋': 'dàn', '當': 'dāng', '擋': 'dǎng', '黨': 'dǎng', '蕩': 'dàng',
+            '檔': 'dàng', '刀': 'dāo', '搗': 'dǎo', '蹈': 'dǎo', '倒': 'dǎo', '島': 'dǎo',
+            '禱': 'dǎo', '導': 'dǎo', '到': 'dào', '稻': 'dào', '悼': 'dào', '道': 'dào',
+            '盜': 'dào', '德': 'dé', '得': 'dé', '的': 'de', '蹬': 'dēng', '燈': 'dēng',
+            '登': 'dēng', '等': 'děng', '瞪': 'dèng', '凳': 'dèng', '鄧': 'dèng', '堤': 'dī',
+            '低': 'dī', '滴': 'dī', '迪': 'dí', '敵': 'dí', '笛': 'dí', '狄': 'dí',
+            '滌': 'dí', '翟': 'dí', '嫡': 'dí', '抵': 'dǐ', '底': 'dǐ', '地': 'dì',
+            '蒂': 'dì', '第': 'dì', '帝': 'dì', '弟': 'dì', '遞': 'dì', '締': 'dì',
+            '顛': 'diān', '掂': 'diān', '滇': 'diān', '碘': 'diǎn', '點': 'diǎn', '典': 'diǎn',
+            '靛': 'diàn', '墊': 'diàn', '電': 'diàn', '佃': 'diàn', '甸': 'diàn', '店': 'diàn',
+            '惦': 'diàn', '奠': 'diàn', '淀': 'diàn', '殿': 'diàn', '刁': 'diāo', '叼': 'diāo',
+            '雕': 'diāo', '凋': 'diāo', '掉': 'diào', '吊': 'diào', '釣': 'diào', '調': 'diào',
+            '跌': 'diē', '爹': 'diē', '碟': 'dié', '蝶': 'dié', '迭': 'dié', '諜': 'dié',
+            '疊': 'dié', '丁': 'dīng', '盯': 'dīng', '叮': 'dīng', '釘': 'dīng', '頂': 'dǐng',
+            '鼎': 'dǐng', '錠': 'dìng', '定': 'dìng', '訂': 'dìng', '丟': 'diū', '東': 'dōng',
+            '冬': 'dōng', '董': 'dǒng', '懂': 'dǒng', '動': 'dòng', '棟': 'dòng', '侗': 'dòng',
+            '恫': 'dòng', '凍': 'dòng', '洞': 'dòng', '兜': 'dōu', '抖': 'dǒu', '鬥': 'dòu',
+            '陡': 'dǒu', '豆': 'dòu', '逗': 'dòu', '痘': 'dòu', '都': 'dū', '督': 'dū',
+            '毒': 'dú', '犢': 'dú', '獨': 'dú', '讀': 'dú', '堵': 'dǔ', '睹': 'dǔ',
+            '賭': 'dǔ', '杜': 'dù', '鍍': 'dù', '肚': 'dù', '度': 'dù', '渡': 'dù',
+            '妒': 'dù', '端': 'duān', '短': 'duǎn', '鍛': 'duàn', '段': 'duàn', '斷': 'duàn',
+            '緞': 'duàn', '堆': 'duī', '兌': 'duì', '隊': 'duì', '對': 'duì', '墩': 'dūn',
+            '噸': 'dūn', '蹲': 'dūn', '敦': 'dūn', '頓': 'dùn', '囤': 'dùn', '鈍': 'dùn',
+            '盾': 'dùn', '遁': 'dùn', '掇': 'duō', '哆': 'duō', '多': 'duō', '奪': 'duó',
+            '垛': 'duǒ', '躲': 'duǒ', '朵': 'duǒ', '跺': 'duò', '舵': 'duò', '剁': 'duò',
+            '惰': 'duò', '墮': 'duò', '蛾': 'é', '峨': 'é', '鵝': 'é', '俄': 'é',
+            '額': 'é', '訛': 'é', '娥': 'é', '惡': 'è', '厄': 'è', '扼': 'è',
+            '遏': 'è', '鄂': 'è', '餓': 'è', '恩': 'ēn', '而': 'ér', '兒': 'ér',
+            '耳': 'ěr', '爾': 'ěr', '餌': 'ěr', '洱': 'ěr', '二': 'èr', '貳': 'èr',
+            '發': 'fā', '罰': 'fá', '筏': 'fá', '伐': 'fá', '乏': 'fá', '閥': 'fá',
+            '法': 'fǎ', '珐': 'fà', '藩': 'fān', '帆': 'fān', '番': 'fān', '翻': 'fān',
+            '樊': 'fán', '釩': 'fán', '繁': 'fán', '凡': 'fán', '煩': 'fán', '反': 'fǎn',
+            '返': 'fǎn', '範': 'fàn', '販': 'fàn', '犯': 'fàn', '飯': 'fàn', '泛': 'fàn',
+            '坊': 'fāng', '芳': 'fāng', '方': 'fāng', '肪':
