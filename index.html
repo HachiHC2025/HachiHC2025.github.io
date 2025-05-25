@@ -54,7 +54,24 @@
             font-weight: bold;
             color: #6a0dad;
             margin-bottom: 8px;
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .speak-btn {
+            background: #e6d5ff;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .speak-btn:hover {
+            background: #d4a5ff;
         }
         .loading {
             color: #888;
@@ -78,7 +95,14 @@
     </div>
 
     <script>
-        // 这里可以添加你的JavaScript翻译功能
+        // 支持的语言和对应的语音合成语言代码
+        const languages = [
+            { code: 'en', name: '英语', voiceLang: 'en-US' },
+            { code: 'ja', name: '日语', voiceLang: 'ja-JP' },
+            { code: 'ko', name: '韩语', voiceLang: 'ko-KR' },
+            { code: 'fr', name: '法语', voiceLang: 'fr-FR' }
+        ];
+
         document.getElementById('inputText').addEventListener('input', function() {
             const inputText = this.value;
             const outputContainer = document.getElementById('output');
@@ -88,21 +112,18 @@
                 return;
             }
             
-            // 模拟翻译结果 - 实际使用时替换为真实API调用
-            const languages = [
-                { code: 'en', name: '英语' },
-                { code: 'ja', name: '日语' },
-                { code: 'ko', name: '韩语' },
-                { code: 'fr', name: '法语' }
-            ];
-            
             let outputHTML = '';
             
             languages.forEach(lang => {
                 outputHTML += `
                     <div class="output-box">
-                        <span class="language-label">${lang.name}：</span>
-                        <div class="translation-result" id="${lang.code}-output">
+                        <div class="language-label">
+                            <span>${lang.name}：</span>
+                            <button class="speak-btn" onclick="speakText('${lang.code}-translation', '${lang.voiceLang}')">
+                                🔊
+                            </button>
+                        </div>
+                        <div class="translation-result" id="${lang.code}-translation">
                             ${inputText.length > 0 ? '翻译加载中...' : ''}
                         </div>
                     </div>
@@ -111,14 +132,35 @@
             
             outputContainer.innerHTML = outputHTML;
             
-            // 实际应用中这里应该调用翻译API
-            // 例如: translateText(inputText, languages);
+            // 这里模拟翻译结果 - 实际使用时替换为真实API调用
+            setTimeout(() => {
+                languages.forEach(lang => {
+                    const translationElement = document.getElementById(`${lang.code}-translation`);
+                    if (translationElement) {
+                        // 这只是模拟翻译结果，实际应该调用API
+                        translationElement.textContent = `[${lang.name}翻译结果] ${inputText}`;
+                    }
+                });
+            }, 800);
         });
         
-        // 实际翻译函数示例
-        async function translateText(text, targetLanguages) {
-            // 这里应该实现实际的API调用
-            // 可以使用Google Translate API、百度翻译API等
+        // 文字转语音功能
+        function speakText(elementId, lang) {
+            const textElement = document.getElementById(elementId);
+            if (!textElement) return;
+            
+            const text = textElement.textContent;
+            if (!text) return;
+            
+            // 使用Web Speech API
+            const speech = new SpeechSynthesisUtterance();
+            speech.text = text;
+            speech.lang = lang;
+            speech.volume = 1;
+            speech.rate = 1;
+            speech.pitch = 1;
+            
+            window.speechSynthesis.speak(speech);
         }
     </script>
 </body>
