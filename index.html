@@ -5,97 +5,158 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>多语种即时翻译器（带语音功能）</title>
     <style>
+        :root {
+            --primary-color: #8a2be2;
+            --secondary-color: #6a0dad;
+            --light-purple: #d4a5ff;
+            --bg-color: #f9f4ff;
+            --text-dark: #333;
+            --text-light: #666;
+            --white: #fff;
+            --disabled: #ccc;
+            --box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
         body { 
             font-family: 'Arial', 'Microsoft YaHei', sans-serif; 
             text-align: center; 
-            margin-top: 50px; 
-            background: #f9f4ff;
+            margin: 50px auto 0;
+            background: var(--bg-color);
             line-height: 1.6;
+            color: var(--text-dark);
+            min-height: 100vh;
         }
+        
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
         }
+        
         textarea { 
             width: 90%; 
-            height: 120px; 
+            min-height: 120px; 
             padding: 15px; 
             font-size: 16px;
-            border: 2px solid #d4a5ff; 
+            border: 2px solid var(--light-purple); 
             border-radius: 12px;
             resize: vertical;
-            transition: border 0.3s;
+            transition: border 0.3s, box-shadow 0.3s;
         }
+        
         textarea:focus {
             outline: none;
-            border-color: #8a2be2;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.2);
         }
+        
         .output-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
             margin-top: 25px;
         }
+        
         .output-box {
-            width: 48%;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: white;
+            padding: 20px;
+            background: var(--white);
             border-radius: 10px; 
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            box-shadow: var(--box-shadow);
             text-align: left;
             position: relative;
+            transition: transform 0.3s;
         }
-        h2 { 
-            color: #8a2be2; 
+        
+        .output-box:hover {
+            transform: translateY(-3px);
+        }
+        
+        h1, h2 { 
+            color: var(--primary-color); 
             margin-bottom: 25px;
         }
+        
         .language-label {
             font-weight: bold;
-            color: #6a0dad;
-            margin-bottom: 8px;
+            color: var(--secondary-color);
+            margin-bottom: 12px;
             display: block;
+            font-size: 1.1em;
         }
-        .loading {
-            color: #888;
-            font-style: italic;
+        
+        .translation-result {
+            min-height: 20px;
+            word-break: break-word;
         }
+        
         .speak-btn {
             position: absolute;
             right: 15px;
             top: 15px;
-            background: #8a2be2;
-            color: white;
+            background: var(--primary-color);
+            color: var(--white);
             border: none;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s;
+            font-size: 14px;
         }
+        
         .speak-btn:hover {
-            background: #6a0dad;
+            background: var(--secondary-color);
             transform: scale(1.1);
         }
+        
         .speak-btn:disabled {
-            background: #ccc;
+            background: var(--disabled);
             cursor: not-allowed;
+            transform: none;
         }
+        
+        .loading-indicator {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(138, 43, 226, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
         @media (max-width: 600px) {
-            .output-box {
+            body {
+                margin-top: 30px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            textarea {
                 width: 100%;
+            }
+            
+            .output-container {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🌸 中文 → 四语同步翻译器（带语音功能）🌸</h2>
-        <textarea id="inputText" placeholder="在这里输入中文...比如「今天天气真好！」"></textarea>
+        <h1>🌸 中文 → 四语同步翻译器（带语音功能）🌸</h1>
+        <textarea id="inputText" placeholder="在这里输入中文...比如「今天天气真好！」" aria-label="输入中文文本"></textarea>
         
         <div class="output-container" id="output">
             <!-- 翻译结果将在这里动态生成 -->
@@ -103,88 +164,200 @@
     </div>
 
     <script>
-        // 免费翻译API（每日限额100次，测试够用啦！）
-        document.getElementById('inputText').addEventListener('input', async (e) => {
+        // 防抖函数，减少API调用频率
+        function debounce(func, delay) {
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(this, args);
+                }, delay);
+            };
+        }
+        
+        // 转义HTML特殊字符，防止XSS攻击
+        function escapeHtml(unsafe) {
+            return unsafe.replace(/[&<>"']/g, function(match) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[match];
+            });
+        }
+        
+        // 语言配置
+        const LANGUAGES = Object.freeze([
+            { code: 'en', name: '英语', voiceLang: 'en-US' },
+            { code: 'ja', name: '日语', voiceLang: 'ja-JP' },
+            { code: 'fr', name: '法语', voiceLang: 'fr-FR' },
+            { code: 'ko', name: '韩语', voiceLang: 'ko-KR' }
+        ]);
+        
+        // DOM元素缓存
+        const elements = {
+            inputText: document.getElementById('inputText'),
+            output: document.getElementById('output')
+        };
+        
+        // 初始化函数
+        function init() {
+            // 添加防抖输入监听
+            elements.inputText.addEventListener('input', debounce(handleInput, 500));
+            
+            // 检查语音合成支持
+            if (!window.speechSynthesis) {
+                console.warn('浏览器不支持语音合成API');
+            }
+        }
+        
+        // 处理输入
+        async function handleInput(e) {
             const text = e.target.value.trim();
-            const outputContainer = document.getElementById('output');
             
             if (!text) {
-                outputContainer.innerHTML = '';
+                elements.output.innerHTML = '';
                 return;
             }
             
-            const languages = [
-                { code: 'en', name: '英语', voiceLang: 'en-US' },
-                { code: 'ja', name: '日语', voiceLang: 'ja-JP' },
-                { code: 'fr', name: '法语', voiceLang: 'fr-FR' },
-                { code: 'ko', name: '韩语', voiceLang: 'ko-KR' }
-            ];
+            // 显示加载状态
+            renderLoadingState();
             
-            let outputHTML = '';
-            
-            for (let lang of languages) {
-                try {
-                    const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh-CN|${lang.code}`);
-                    const data = await response.json();
-                    const translatedText = data.responseData.translatedText || '（翻译失败）';
-                    
-                    outputHTML += `
-                        <div class="output-box">
-                            <button class="speak-btn" onclick="speakText('${translatedText}', '${lang.voiceLang}')" 
-                                    title="朗读翻译" ${!translatedText || translatedText === '（翻译失败）' ? 'disabled' : ''}>
-                                🔊
-                            </button>
-                            <span class="language-label">${lang.name}：</span>
-                            <div class="translation-result">
-                                ${translatedText}
-                            </div>
-                        </div>
-                    `;
-                } catch (error) {
-                    outputHTML += `
-                        <div class="output-box">
-                            <button class="speak-btn" disabled title="无法朗读">
-                                🔊
-                            </button>
-                            <span class="language-label">${lang.name}:</span>
-                            <div class="translation-result">🆘 API忙线中...</div>
-                        </div>
-                    `;
-                }
+            try {
+                // 并行获取所有翻译
+                const translations = await Promise.allSettled(
+                    LANGUAGES.map(lang => fetchTranslation(text, lang))
+                );
+                
+                // 渲染结果
+                renderTranslations(translations);
+            } catch (error) {
+                console.error('翻译出错:', error);
+                renderErrorState();
             }
-            
-            outputContainer.innerHTML = outputHTML;
-        });
+        }
+        
+        // 获取翻译
+        async function fetchTranslation(text, lang) {
+            try {
+                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=zh-CN|${lang.code}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return {
+                    ...lang,
+                    translatedText: data.responseData?.translatedText || '（翻译失败）'
+                };
+            } catch (error) {
+                console.error(`${lang.name}翻译出错:`, error);
+                return {
+                    ...lang,
+                    translatedText: '🆘 翻译服务暂时不可用'
+                };
+            }
+        }
+        
+        // 渲染加载状态
+        function renderLoadingState() {
+            elements.output.innerHTML = LANGUAGES.map(lang => `
+                <div class="output-box">
+                    <button class="speak-btn" disabled>
+                        🔊
+                    </button>
+                    <span class="language-label">${lang.name}：</span>
+                    <div class="translation-result">
+                        <span class="loading-indicator"></span>翻译中...
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 渲染翻译结果
+        function renderTranslations(translations) {
+            elements.output.innerHTML = translations.map(result => {
+                const { name, translatedText, voiceLang } = result.value || {};
+                const isSuccess = result.status === 'fulfilled' && 
+                                translatedText && 
+                                translatedText !== '（翻译失败）';
+                
+                return `
+                    <div class="output-box">
+                        <button class="speak-btn" 
+                                onclick="speakText('${escapeHtml(translatedText)}', '${voiceLang}')" 
+                                title="朗读翻译" 
+                                ${!isSuccess ? 'disabled' : ''}>
+                            🔊
+                        </button>
+                        <span class="language-label">${name}：</span>
+                        <div class="translation-result">
+                            ${translatedText || '翻译失败'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 渲染错误状态
+        function renderErrorState() {
+            elements.output.innerHTML = `
+                <div class="output-box" style="grid-column: 1/-1">
+                    <div class="translation-result" style="color: red;">
+                        ⚠️ 翻译服务暂时不可用，请稍后再试
+                    </div>
+                </div>
+            `;
+        }
         
         // 语音合成函数
         function speakText(text, lang) {
-            if (!text || text === '（翻译失败）') return;
+            if (!text || text.includes('（翻译失败）') || text.includes('不可用')) return;
             
-            // 检查浏览器是否支持语音合成
             if (!window.speechSynthesis) {
                 alert('您的浏览器不支持语音合成功能，请使用Chrome、Edge或Firefox等现代浏览器。');
                 return;
             }
             
-            // 停止当前正在播放的语音
+            // 停止当前语音
             window.speechSynthesis.cancel();
             
-            // 创建语音合成实例
-            const utterance = new SpeechSynthesisUtterance(text);
+            const utterance = new SpeechSynthesisUtterance();
+            utterance.text = text;
             utterance.lang = lang;
-            utterance.rate = 0.9; // 稍微放慢语速
+            utterance.rate = 0.9;
+            utterance.volume = 1;
+            utterance.pitch = 1;
             
-            // 播放语音
-            window.speechSynthesis.speak(utterance);
+            // 查找合适的语音
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.lang === lang) || 
+                                 voices.find(v => v.lang.startsWith(lang.split('-')[0]));
             
-            // 错误处理
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+            
             utterance.onerror = (event) => {
                 console.error('语音合成错误:', event);
-                alert('朗读时出错，请重试或检查浏览器设置。');
+                alert('朗读时出错: ' + event.error);
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // 初始化语音合成API
+        if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                console.log('语音列表已加载');
             };
         }
+        
+        // 启动应用
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
-
-
