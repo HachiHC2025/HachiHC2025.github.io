@@ -21,7 +21,6 @@
             --history-bg: #f0e5ff;
             --transition: all 0.3s ease;
             --pinyin-color: #e91e63;
-            --favorite-color: #ffcc00;
         }
         
         * {
@@ -187,33 +186,6 @@
             transform: none;
         }
         
-        .favorite-btn {
-            position: absolute;
-            right: 55px;
-            top: 15px;
-            background: transparent;
-            color: var(--text-light);
-            border: none;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            font-size: 16px;
-        }
-        
-        .favorite-btn:hover {
-            color: var(--favorite-color);
-            transform: scale(1.1);
-        }
-        
-        .favorite-btn.favorited {
-            color: var(--favorite-color);
-        }
-        
         .loading-indicator {
             display: inline-block;
             width: 16px;
@@ -304,7 +276,6 @@
             border-bottom: 1px solid #eee;
             cursor: pointer;
             transition: var(--transition);
-            position: relative;
         }
         
         .history-item:hover {
@@ -435,226 +406,6 @@
             transform: scale(1.1);
         }
         
-        /* 收藏功能樣式 */
-        .favorites-container {
-            margin-top: 30px;
-            animation: fadeIn 0.3s ease-out;
-            display: none;
-        }
-        
-        .favorites-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .favorites-tabs {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 5px;
-            margin-bottom: 15px;
-        }
-        
-        .favorites-tab {
-            padding: 5px 15px;
-            border-radius: 20px;
-            background: var(--light-purple);
-            color: var(--text-dark);
-            cursor: pointer;
-            transition: var(--transition);
-            white-space: nowrap;
-            font-size: 0.9em;
-        }
-        
-        .favorites-tab.active {
-            background: var(--primary-color);
-            color: var(--white);
-        }
-        
-        .favorites-tab:hover:not(.active) {
-            background: var(--secondary-color);
-            color: var(--white);
-        }
-        
-        .favorites-list {
-            max-height: 300px;
-            overflow-y: auto;
-            border-radius: 10px;
-            background: var(--white);
-            box-shadow: var(--box-shadow);
-        }
-        
-        .favorite-item {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            transition: var(--transition);
-            position: relative;
-        }
-        
-        .favorite-item:hover {
-            background: var(--history-bg);
-        }
-        
-        .favorite-item:last-child {
-            border-bottom: none;
-        }
-        
-        .favorite-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .favorite-item-folder {
-            font-size: 0.8em;
-            color: var(--primary-color);
-            background: rgba(138, 43, 226, 0.1);
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-        
-        .favorite-item-time {
-            font-size: 0.8em;
-            color: var(--text-light);
-        }
-        
-        .favorite-item-text {
-            font-weight: bold;
-            margin-bottom: 8px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        
-        .favorite-item-translation {
-            color: var(--text-light);
-            font-size: 0.9em;
-            margin-bottom: 5px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        
-        .favorite-item-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .favorite-item-btn {
-            padding: 3px 8px;
-            border-radius: 4px;
-            border: none;
-            background: var(--light-purple);
-            color: var(--text-dark);
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 0.8em;
-        }
-        
-        .favorite-item-btn:hover {
-            background: var(--secondary-color);
-            color: var(--white);
-        }
-        
-        .favorite-item-btn.delete {
-            background: rgba(255, 77, 79, 0.1);
-            color: var(--error-color);
-        }
-        
-        .favorite-item-btn.delete:hover {
-            background: var(--error-color);
-            color: var(--white);
-        }
-        
-        /* 新增文件夾模態框 */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
-        
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .modal {
-            background: var(--white);
-            border-radius: 10px;
-            box-shadow: var(--box-shadow);
-            width: 90%;
-            max-width: 400px;
-            padding: 20px;
-            transform: translateY(-20px);
-            transition: var(--transition);
-        }
-        
-        .modal-overlay.active .modal {
-            transform: translateY(0);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-title {
-            color: var(--primary-color);
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-        
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5em;
-            cursor: pointer;
-            color: var(--text-light);
-        }
-        
-        .modal-body {
-            margin-bottom: 20px;
-        }
-        
-        .modal-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--light-purple);
-            border-radius: 6px;
-            margin-bottom: 15px;
-        }
-        
-        .modal-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-        
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -681,10 +432,6 @@
                 width: 100%;
                 justify-content: flex-end;
             }
-            
-            .favorite-btn {
-                right: 50px;
-            }
         }
     </style>
 </head>
@@ -701,7 +448,6 @@
             <button id="clearBtn" class="btn" disabled>清空</button>
             <button id="translateBtn" class="btn" disabled>翻譯</button>
             <button id="showHistoryBtn" class="btn btn-secondary">顯示歷史記錄</button>
-            <button id="showFavoritesBtn" class="btn btn-secondary">顯示收藏</button>
         </div>
         
         <!-- 拼音和中文轉換區域 - 修改為縱向排列並移除原文 -->
@@ -741,42 +487,6 @@
                 <div class="empty-state">暫無歷史記錄</div>
             </div>
         </div>
-        
-        <!-- 新增收藏功能區域 -->
-        <div class="favorites-container" id="favoritesContainer">
-            <div class="favorites-header">
-                <h2>我的收藏</h2>
-                <div class="history-actions">
-                    <button id="newFolderBtn" class="btn btn-secondary">新建文件夾</button>
-                    <button id="hideFavoritesBtn" class="btn">隱藏收藏</button>
-                </div>
-            </div>
-            
-            <div class="favorites-tabs" id="favoritesTabs">
-                <!-- 文件夾標籤將在這裡動態生成 -->
-            </div>
-            
-            <div class="favorites-list" id="favoritesList">
-                <div class="empty-state">暫無收藏項目</div>
-            </div>
-        </div>
-        
-        <!-- 新增文件夾模態框 -->
-        <div class="modal-overlay" id="folderModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">新建收藏文件夾</div>
-                    <button class="modal-close" id="closeFolderModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <input type="text" class="modal-input" id="folderNameInput" placeholder="輸入文件夾名稱">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="cancelFolderBtn">取消</button>
-                    <button class="btn" id="confirmFolderBtn">確認</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -786,8 +496,6 @@
         const CACHE_EXPIRY = 30 * 60 * 1000; // 30分鐘緩存
         const MAX_HISTORY_ITEMS = 50;
         const STORAGE_KEY = 'translationHistory';
-        const FAVORITES_STORAGE_KEY = 'translationFavorites';
-        const FOLDERS_STORAGE_KEY = 'favoriteFolders';
         
         // 語言配置
         const LANGUAGES = Object.freeze([
@@ -807,9 +515,7 @@
         const appState = {
             currentPinyinMode: PINYIN_MODES.BLOCK,
             isPinyinVisible: false,
-            currentPinyin: [],
-            currentFavoriteFolder: 'default',
-            isFavoritesVisible: false
+            currentPinyin: []
         };
         
         // 快取對象
@@ -832,18 +538,7 @@
             pinyinText: document.getElementById('pinyinText'),
             traditionalText: document.getElementById('traditionalText'),
             simplifiedText: document.getElementById('simplifiedText'),
-            togglePinyinBtn: document.getElementById('togglePinyinBtn'),
-            showFavoritesBtn: document.getElementById('showFavoritesBtn'),
-            hideFavoritesBtn: document.getElementById('hideFavoritesBtn'),
-            favoritesContainer: document.getElementById('favoritesContainer'),
-            favoritesTabs: document.getElementById('favoritesTabs'),
-            favoritesList: document.getElementById('favoritesList'),
-            newFolderBtn: document.getElementById('newFolderBtn'),
-            folderModal: document.getElementById('folderModal'),
-            closeFolderModal: document.getElementById('closeFolderModal'),
-            cancelFolderBtn: document.getElementById('cancelFolderBtn'),
-            confirmFolderBtn: document.getElementById('confirmFolderBtn'),
-            folderNameInput: document.getElementById('folderNameInput')
+            togglePinyinBtn: document.getElementById('togglePinyinBtn')
         };
         
         // 語音合成對象
@@ -855,8 +550,6 @@
             setupEventListeners();
             initSpeechSynthesis();
             loadHistory();
-            loadFavoriteFolders();
-            loadFavorites();
         }
         
         // 設置事件監聽器
@@ -869,12 +562,6 @@
             elements.clearHistoryBtn.addEventListener('click', clearHistory);
             elements.speakOriginalBtn.addEventListener('click', speakOriginalText);
             elements.togglePinyinBtn.addEventListener('click', togglePinyinMode);
-            elements.showFavoritesBtn.addEventListener('click', showFavorites);
-            elements.hideFavoritesBtn.addEventListener('click', hideFavorites);
-            elements.newFolderBtn.addEventListener('click', showFolderModal);
-            elements.closeFolderModal.addEventListener('click', hideFolderModal);
-            elements.cancelFolderBtn.addEventListener('click', hideFolderModal);
-            elements.confirmFolderBtn.addEventListener('click', createNewFolder);
             
             // 快捷鍵支持
             document.addEventListener('keydown', (e) => {
@@ -1157,4 +844,280 @@
                     ...lang,
                     translatedText: data.responseData?.translatedText || '（翻譯失敗）',
                     success: !!data.responseData?.translatedText
-               
+                };
+            } catch (error) {
+                console.error('備用翻譯API錯誤:', error);
+                return {
+                    ...lang,
+                    translatedText: '🆘 翻譯服務暫時不可用',
+                    success: false
+                };
+            }
+        }
+        
+        // 生成緩存鍵
+        function generateCacheKey(text) {
+            return text;
+        }
+        
+        // 從緩存獲取
+        function getFromCache(key) {
+            const item = translationCache.get(key);
+            if (item && Date.now() - item.timestamp < CACHE_EXPIRY) {
+                return item.data;
+            }
+            return null;
+        }
+        
+        // 保存到緩存
+        function saveToCache(key, data) {
+            translationCache.set(key, {
+                data: data,
+                timestamp: Date.now()
+            });
+        }
+        
+        // 渲染加載狀態
+        function renderLoadingState() {
+            elements.output.innerHTML = LANGUAGES.map(lang => `
+                <div class="output-box">
+                    <button class="speak-btn" disabled>
+                        🔊
+                    </button>
+                    <span class="language-label">${lang.name}：</span>
+                    <div class="translation-result">
+                        <span class="loading-indicator"></span>翻譯中...
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 渲染翻譯結果
+        function renderTranslations(translations) {
+            elements.output.innerHTML = translations.map(result => {
+                const { name, translatedText, voiceLang, success } = result;
+                const isSuccess = success !== false;
+                
+                return `
+                    <div class="output-box">
+                        <button class="speak-btn" 
+                                onclick="speakText('${escapeHtml(translatedText)}', '${voiceLang}')" 
+                                title="朗讀翻譯" 
+                                ${!isSuccess ? 'disabled' : ''}>
+                            🔊
+                        </button>
+                        <span class="language-label">${name}：</span>
+                        <div class="translation-result ${isSuccess ? 'success-text' : 'error-text'}">
+                            ${translatedText || '翻譯失敗'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 渲染錯誤狀態
+        function renderErrorState(message = '翻譯服務暫時不可用，請稍後再試') {
+            elements.output.innerHTML = `
+                <div class="output-box" style="grid-column: 1/-1">
+                    <div class="translation-result error-text">
+                        ⚠️ ${message}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 清空輸出
+        function clearOutput() {
+            elements.output.innerHTML = '';
+        }
+        
+        // 清空所有
+        function clearAll() {
+            elements.inputText.value = '';
+            clearOutput();
+            toggleButtons(0);
+            updateCharCounter(0);
+            hidePinyin();
+            stopSpeaking();
+        }
+        
+        // 停止所有語音
+        function stopSpeaking() {
+            if (speechSynthesis) {
+                speechSynthesis.cancel();
+            }
+        }
+        
+        // 語音合成函數
+        function speakText(text, lang) {
+            if (!text || text.includes('（翻譯失敗）') || text.includes('不可用')) return;
+            
+            if (!speechSynthesis) {
+                alert('您的瀏覽器不支持語音合成功能，請使用Chrome、Edge或Firefox等現代瀏覽器。');
+                return;
+            }
+            
+            stopSpeaking();
+            
+            const utterance = new SpeechSynthesisUtterance();
+            utterance.text = text;
+            utterance.lang = lang;
+            utterance.rate = 0.9;
+            utterance.volume = 1;
+            utterance.pitch = 1;
+            
+            // 查找合適的語音
+            const preferredVoice = voices.find(v => v.lang === lang) || 
+                                 voices.find(v => v.lang.startsWith(lang.split('-')[0]));
+            
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+            
+            utterance.onerror = (event) => {
+                console.error('語音合成錯誤:', event);
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+        
+        // 初始化語音合成
+        function initSpeechSynthesis() {
+            if (!speechSynthesis) {
+                console.warn('此瀏覽器不支持語音合成API');
+                return;
+            }
+            
+            // 語音列表加載處理
+            const handleVoicesChanged = () => {
+                voices = speechSynthesis.getVoices();
+                console.log('語音列表已加載，共', voices.length, '種語音');
+            };
+            
+            speechSynthesis.onvoiceschanged = handleVoicesChanged;
+            
+            // 立即嘗試獲取語音列表
+            handleVoicesChanged();
+            
+            // 某些瀏覽器需要延遲才能獲取語音列表
+            if (voices.length === 0) {
+                setTimeout(handleVoicesChanged, 1000);
+            }
+        }
+        
+        // 歷史記錄功能
+        function loadHistory() {
+            try {
+                const history = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+                renderHistory(history);
+                return history;
+            } catch (e) {
+                console.error('讀取歷史記錄失敗:', e);
+                return [];
+            }
+        }
+        
+        function saveHistory(history) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+            } catch (e) {
+                console.error('保存歷史記錄失敗:', e);
+            }
+        }
+        
+        function addToHistory(text, translations) {
+            const history = loadHistory();
+            const existingIndex = history.findIndex(item => item.text === text);
+            
+            if (existingIndex !== -1) {
+                history.splice(existingIndex, 1);
+            }
+            
+            history.unshift({
+                text: text,
+                translations: translations,
+                timestamp: new Date().toISOString()
+            });
+            
+            if (history.length > MAX_HISTORY_ITEMS) {
+                history.length = MAX_HISTORY_ITEMS;
+            }
+            
+            saveHistory(history);
+            renderHistory(history);
+        }
+        
+        function renderHistory(history) {
+            if (history.length === 0) {
+                elements.historyList.innerHTML = '<div class="empty-state">暫無歷史記錄</div>';
+                return;
+            }
+            
+            elements.historyList.innerHTML = history.map(item => {
+                const date = new Date(item.timestamp);
+                const timeString = date.toLocaleString();
+                
+                return `
+                    <div class="history-item" data-text="${escapeHtml(item.text)}">
+                        <div class="history-item-time">${timeString}</div>
+                        <div class="history-item-text">${escapeHtml(item.text)}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // 使用事件委託提高性能
+            elements.historyList.addEventListener('click', (e) => {
+                const item = e.target.closest('.history-item');
+                if (item) {
+                    const text = item.getAttribute('data-text');
+                    elements.inputText.value = text;
+                    handleInputChange({ target: elements.inputText });
+                    handleInput(text);
+                }
+            });
+        }
+        
+        function clearHistory() {
+            if (confirm('確定要清空所有歷史記錄嗎？此操作不可撤銷。')) {
+                localStorage.removeItem(STORAGE_KEY);
+                renderHistory([]);
+            }
+        }
+        
+        function showHistory() {
+            elements.historyContainer.style.display = 'block';
+            elements.showHistoryBtn.style.display = 'none';
+        }
+        
+        function hideHistory() {
+            elements.historyContainer.style.display = 'none';
+            elements.showHistoryBtn.style.display = 'block';
+        }
+        
+        // 工具函數
+        function debounce(func, delay) {
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+        
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe.toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+        
+        // 啟動應用
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // 暴露全局函數
+        window.speakText = speakText;
+    </script>
+</body>
+</html>
